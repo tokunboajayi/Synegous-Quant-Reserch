@@ -55,8 +55,9 @@ async def shutdown_event():
     runner.stop()
 
 # Merge telemetry endpoints (or run separately)
-# For simplicity, we mount telemetry routes here
 from nmie.api.telemetry import app as telemetry_sub
+from nmie.api.logging_config import logger
+
 app.mount("/telemetry", telemetry_sub)
 
 # Mount Dashboard UI
@@ -76,13 +77,13 @@ current_file = Path(__file__).resolve()
 project_root = current_file.parent.parent.parent # nmie/
 dashboard_path = project_root / "apps" / "graphdash_new" / "dist"
 
-print(f"DEBUG: Mounting Dashboard from {dashboard_path}")
-print(f"DEBUG: Path Exists? {dashboard_path.exists()}")
+logger.info(f"Mounting Dashboard from {dashboard_path}")
+logger.info(f"Path Exists? {dashboard_path.exists()}")
 
 if dashboard_path.exists():
     app.mount("/dashboard", StaticFiles(directory=str(dashboard_path), html=True), name="dashboard")
 else:
-    print(f"Warning: Dashboard path {dashboard_path} not found. Ensure 'npm run build' was run.")
+    logger.warning(f"Dashboard path {dashboard_path} not found. Ensure 'npm run build' was run.")
 
 @app.get("/")
 def root():

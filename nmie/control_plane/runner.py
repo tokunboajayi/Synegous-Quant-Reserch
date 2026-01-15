@@ -7,6 +7,7 @@ from pathlib import Path
 from nmie.control_plane.queue import PersistentQueue
 from nmie.control_plane.jobs import Job, JobParams, Run
 from nmie.control_plane.state import JobStatus, JobType, RunStatus
+from nmie.api.logging_config import logger
 
 # Import Data Plane Functions
 # We assume these exist or will exist. Steps map to functions.
@@ -27,14 +28,14 @@ class JobRunner:
         self._stop_event.clear()
         self.worker_thread = threading.Thread(target=self._worker_loop, daemon=True)
         self.worker_thread.start()
-        print("JobRunner started.")
+        logger.info("JobRunner started.")
 
     def stop(self):
         self.running = False
         self._stop_event.set()
         if self.worker_thread:
             self.worker_thread.join(timeout=2)
-        print("JobRunner stopped.")
+        logger.info("JobRunner stopped.")
 
     def _worker_loop(self):
         while not self._stop_event.is_set():
@@ -47,12 +48,12 @@ class JobRunner:
                 else:
                     time.sleep(1) # Poll interval
             except Exception as e:
-                print(f"Runner Loop Error: {e}")
-                traceback.print_exc()
+                logger.error(f"Runner Loop Error: {e}")
+                logger.error(traceback.format_exc())
                 time.sleep(5)
 
     def _execute_job(self, job: Job):
-        print(f"Starting Job {job.job_id} ({job.type})")
+        logger.info(f"Starting Job {job.job_id} ({job.type})")
         
         # Update Status RUNNING
         self.queue.update_job(job.job_id, {"status": JobStatus.RUNNING, "started_at": datetime.utcnow()})
@@ -77,7 +78,7 @@ class JobRunner:
                 "finished_at": datetime.utcnow(),
                 # "artifacts_path": ...
             })
-            print(f"Job {job.job_id} COMPLETED")
+            logger.info(f"Job {job.job_id} COMPLETED")
             
             # Check if all jobs for this run are complete
             all_jobs = self.queue.list_jobs_for_run(job.run_id)
@@ -86,8 +87,8 @@ class JobRunner:
 
         except Exception as e:
             err = str(e)
-            print(f"Job {job.job_id} FAILED: {err}")
-            traceback.print_exc()
+            logger.error(f"Job {job.job_id} FAILED: {err}")
+            logger.error(traceback.format_exc())
             self.queue.update_job(job.job_id, {
                 "status": JobStatus.FAILED, 
                 "finished_at": datetime.utcnow(), 
@@ -122,7 +123,7 @@ class JobRunner:
             )
             self.queue.add_job(child)
             
-        print(f"Enqueued {len(steps)} steps for Run {parent_job.run_id}")
+        logger.info(f"Enqueued {len(steps)} steps for Run {parent_job.run_id}")
         self.queue.update_run_status(parent_job.run_id, RunStatus.RUNNING)
 
 
