@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  nmie_platform:
+    build: .
+    image: nmie-v3-plus
+    container_name: nmie_container
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist the data directory
+      - ./data:/app/data
+      # Persist the SQLite database
+      - ./nmie_control.db:/app/nmie_control.db
+      # Optional: Mount logs
+      - ./logs:/app/logs
+    environment:
+      - NMIE_PROVIDER=polygon
+      - POLYGON_API_KEY=${POLYGON_API_KEY}
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3

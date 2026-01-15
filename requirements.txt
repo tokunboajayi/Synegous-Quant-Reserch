@@ -1,0 +1,17 @@
+pandas
+polars
+requests
+python-dotenv
+pyarrow
+fastapi
+uvicorn
+scikit-learn
+numpy
+matplotlib
+seaborn
+networkx
+torch
+cvxpy
+tqdm
+pydantic
+optuna

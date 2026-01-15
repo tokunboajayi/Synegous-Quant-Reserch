@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vite
+dist-ssr
+*.local
+
+# Logs
+*.log
+logs/
+
+# Data & Database
+*.db
+*.sqlite3
+data/
+mnx_data/
+mnx_inputs.parquet
+outputs/
+*.parquet
+*.csv
+!nmie/data/spy_us_d.csv # Keep if essential example
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project Specific
+nmie_container/
+temp/
+debug_*.py
+scratch_*.py
+test_*.py
+!tests/

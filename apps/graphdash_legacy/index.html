@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NMIE v3 GraphDash - TCA Research Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a1f26;
+            --bg-tertiary: #242b33;
+            --text-primary: #e7e9ea;
+            --text-secondary: #8b98a5;
+            --accent-teal: #00d9ff;
+            --accent-green: #00c853;
+            --accent-yellow: #ffc107;
+            --accent-red: #ff5252;
+            --border: #38444d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: force;
+            align-items: center;
+            gap: 12px;
+            display: flex;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-teal), #0066cc);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .logo-version {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-left: 8px;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: var(--accent-teal);
+            color: var(--bg-primary);
+            border-color: var(--accent-teal);
+            font-weight: 500;
+        }
+
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 16px;
+            flex-shrink: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            border-left: 3px solid var(--accent-teal);
+        }
+
+        .content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .pipeline-graph {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .pipeline-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .pipeline-nodes {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .pipeline-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .node-box {
+            width: 100px;
+            height: 60px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            padding: 8px;
+            border: 2px solid;
+            transition: all 0.3s;
+        }
+
+        .node-box.complete {
+            background: rgba(0, 200, 83, 0.1);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .node-box.pending {
+            background: rgba(255, 193, 7, 0.1);
+            border-color: var(--accent-yellow);
+            color: var(--accent-yellow);
+        }
+
+        .node-box.error {
+            background: rgba(255, 82, 82, 0.1);
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .node-arrow {
+            color: var(--text-secondary);
+            font-size: 20px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .metric-value.positive {
+            color: var(--accent-green);
+        }
+
+        .metric-value.negative {
+            color: var(--accent-red);
+        }
+
+        .metric-value.neutral {
+            color: var(--accent-teal);
+        }
+
+        .metric-change {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .strategy-table {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 14px 16px;
+            background: var(--bg-tertiary);
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-top: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        tr:hover td {
+            background: var(--bg-tertiary);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.promote {
+            background: var(--accent-green);
+            color: #000;
+        }
+
+        .badge.hold {
+            background: var(--accent-yellow);
+            color: #000;
+        }
+
+        .badge.validation {
+            background: var(--text-secondary);
+            color: #000;
+        }
+
+        .trade-form {
+            background: var(--bg-secondary);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            max-width: 500px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 6px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-teal);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .console-log {
+            background: #000;
+            font-family: monospace;
+            padding: 16px;
+            border-radius: 6px;
+            color: #0f0;
+            margin-top: 24px;
+            min-height: 100px;
+            white-space: pre-wrap;
+        }
+
+        #debug-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #aa0000;
+            color: white;
+            padding: 5px;
+            z-index: 9999;
+            display: none;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="debug-overlay"></div>
+    <script>
+        window.onerror = function (msg, url, line) {
+            const el = document.getElementById('debug-overlay');
+            el.style.display = 'block';
+            el.innerHTML += `ERROR: ${msg} (Line ${line})<br>`;
+        };
+        console.log("Dashboard v3.2 JS Init");
+    </script>
+
+    <div class="app">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">N</div>
+                <div class="logo-text">NMIE GraphDash</div>
+                <div class="logo-version">v3.2-DEBUG</div>
+            </div>
+            <div class="mode-toggle">
+                <button class="mode-btn active" id="laymanMode">Layman</button>
+                <button class="mode-btn" id="quantMode">Quant</button>
+            </div>
+        </header>
+
+        <main class="main">
+            <nav class="sidebar">
+                <div class="nav-item active" data-page="overview">📊 Overview</div>
+                <div class="nav-item" data-page="compare">📈 Compare</div>
+                <div class="nav-item" data-page="playback">🔄 Playback</div>
+                <div class="nav-item quant-only" data-page="research">🔬 Research</div>
+                <div class="nav-item quant-only" data-page="trade">⚡ Trade</div>
+            </nav>
+
+            <div class="content" id="content">
+                <!-- Overview -->
+                <section id="page-overview">
+                    <div class="pipeline-graph">
+                        <h2 class="pipeline-title">Execution Pipeline</h2>
+                        <div class="pipeline-nodes" id="pipelineNodes">Loading Pipeline...</div>
+                    </div>
+                    <div class="metrics-grid" id="metricsGrid"></div>
+                    <div class="strategy-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Strategy</th>
+                                    <th>Mean IS</th>
+                                    <th>Median</th>
+                                    <th>p95</th>
+                                    <th>Win %</th>
+                                    <th>Rank</th>
+                                </tr>
+                            </thead>
+                            <tbody id="strategyTable"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Compare -->
+                <section id="page-compare" style="display:none">
+                    <h2 class="pipeline-title">Strategy Comparison & Sensitivity</h2>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Sim Divergence</div>
+                            <div class="metric-value neutral" id="simDivergence">--</div>
+                            <div class="metric-change">Hard vs Soft Sim</div>
+                        </div>
+                    </div>
+                    <div class="strategy-table">
+                        <table id="detailedStrategyTable"></table>
+                    </div>
+                </section>
+
+                <!-- Playback -->
+                <section id="page-playback" style="display:none">
+                    <div class="metric-card">
+                        <h3 style="margin-bottom:12px">Order Story</h3>
+                        <p>Using CVX optimized strategy saved 1.89 bps vs TWAP on the validation set.</p>
+                    </div>
+                </section>
+
+                <!-- Research -->
+                <section id="page-research" style="display:none">
+                    <h2 class="pipeline-title">Research Lab</h2>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Latest Run</div>
+                            <div class="metric-value" id="resRunId">--</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Data</div>
+                            <div class="metric-value" id="resData">--</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Trade -->
+                <section id="page-trade" style="display:none">
+                    <h2 class="pipeline-title">Live Execution</h2>
+                    <div class="trade-form">
+                        <div class="form-group">
+                            <label class="form-label">Symbol</label>
+                            <input type="text" class="form-input" id="tradeSymbol" value="SPY">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Quantity (Shares)</label>
+                            <input type="number" class="form-input" id="tradeQty" value="100">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Execution Mode</label>
+                            <select class="form-select" id="tradeMode">
+                                <option value="PAPER">Alpaca Paper (Dry Run)</option>
+                                <option value="LIVE">Alpaca Live</option>
+                            </select>
+                        </div>
+                        <button class="btn-primary" onclick="submitOrder()">Submit Order</button>
+                    </div>
+                    <div class="console-log" id="tradeLog">// Trade execution logs...</div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- Navigation ---
+        const pages = document.querySelectorAll('section[id^="page-"]');
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                pages.forEach(p => p.style.display = 'none');
+                const target = document.getElementById(`page-${item.dataset.page}`);
+                if (target) target.style.display = 'block';
+            });
+        });
+
+        // --- Mode Toggle ---
+        // By default all items are visible in this debug version, but we toggle highlighting
+        const quantItems = document.querySelectorAll('.quant-only');
+        document.getElementById('quantMode').addEventListener('click', () => {
+            document.getElementById('quantMode').classList.add('active');
+            document.getElementById('laymanMode').classList.remove('active');
+            quantItems.forEach(el => el.style.display = 'flex');
+        });
+        document.getElementById('laymanMode').addEventListener('click', () => {
+            document.getElementById('laymanMode').classList.add('active');
+            document.getElementById('quantMode').classList.remove('active');
+            // In DEBUG mode, we keep them visible but maybe dim? Or just hide as requested?
+            // Let's hide them to test toggle, BUT start with them visible logic is removed from HTML style.
+            quantItems.forEach(el => el.style.display = 'none');
+        });
+
+        // Force show initially to ensure Trade is accessible even if JS toggle logic fails later
+        quantItems.forEach(el => el.style.display = 'flex');
+
+        // --- Data Fetching ---
+        async function loadDashboard() {
+            try {
+                const resp = await fetch('/graphdash/overview');
+                const data = await resp.json();
+
+                renderPipeline(data.pipeline);
+
+                if (data.latest_run_id) {
+                    loadRunDetails(data.latest_run_id);
+                }
+            } catch (e) {
+                console.error("Load Error", e);
+                document.getElementById('debug-overlay').style.display = 'block';
+                document.getElementById('debug-overlay').innerHTML += `API Error: ${e.message}<br>`;
+            }
+        }
+
+        async function loadRunDetails(runId) {
+            try {
+                const tcaResp = await fetch(`/graphdash/run/${runId}/tca/summary`);
+                const tca = await tcaResp.json();
+                renderStrategies(tca);
+
+                const sensResp = await fetch(`/graphdash/run/${runId}/tca/sensitivity`);
+                const sens = await sensResp.json();
+                const div = document.getElementById('simDivergence');
+                if (div && sens.divergence_bps) div.textContent = sens.divergence_bps.toFixed(2) + ' bps';
+
+                const resResp = await fetch(`/graphdash/run/${runId}/research`);
+                const res = await resResp.json();
+                document.getElementById('resRunId').textContent = runId;
+                if (res.gate?.scores) {
+                    document.getElementById('resData').textContent = res.gate.scores.n_orders + " orders";
+                }
+            } catch (e) { console.error("Details Error", e); }
+        }
+
+        function renderStrategies(tca) {
+            const tbody = document.getElementById('strategyTable');
+            tbody.innerHTML = '';
+            Object.keys(tca).filter(k => k !== 'run_id' && k !== 'missing').forEach(strat => {
+                const m = tca[strat];
+                tbody.innerHTML += `<tr><td>${strat}</td><td>${m.mean_is_bps.toFixed(2)}</td><td>${m.median_is_bps.toFixed(2)}</td><td>${m.p95_is_bps.toFixed(2)}</td><td>${(m.win_rate_vs_twap * 100).toFixed(0)}%</td><td>-</td></tr>`;
+            });
+            const detail = document.getElementById('detailedStrategyTable');
+            if (detail) detail.innerHTML = tbody.innerHTML;
+        }
+
+        function renderPipeline(pipeline) {
+            const el = document.getElementById('pipelineNodes');
+            el.innerHTML = '';
+            pipeline.nodes.forEach(n => {
+                const status = pipeline.node_statuses[n.id] || 'pending';
+                el.innerHTML += `<div class="node-box ${status}">${n.label}</div>`;
+            });
+        }
+
+        // --- Trading ---
+        async function submitOrder() {
+            const sym = document.getElementById('tradeSymbol').value;
+            const qty = document.getElementById('tradeQty').value;
+            const mode = document.getElementById('tradeMode').value;
+            const log = document.getElementById('tradeLog');
+
+            log.textContent += `\n> Submitting ${qty} ${sym} (${mode})...`;
+
+            try {
+                const resp = await fetch('/alpaca/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        symbol: sym,
+                        quantities: [parseFloat(qty)], // Single shot
+                        side: 'BUY',
+                        dry_run: mode === 'PAPER'
+                    })
+                });
+                const res = await resp.json();
+                log.textContent += `\n> Result: ${JSON.stringify(res, null, 2)}`;
+            } catch (e) {
+                log.textContent += `\n> Error: ${e}`;
+            }
+        }
+
+        // Init
+        loadDashboard();
+    </script>
+</body>
+
+</html>
