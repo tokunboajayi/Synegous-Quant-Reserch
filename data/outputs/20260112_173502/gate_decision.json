@@ -1,0 +1,16 @@
+{
+  "run_id": "20260112_173502",
+  "decision": "HOLD",
+  "is_validation_only": true,
+  "reasons": [
+    "Only 5 days < minimum 60",
+    "Only 1 tickers < minimum 10",
+    "Only 20 orders < minimum 500",
+    "RUN LABELED: PIPELINE VALIDATION ONLY",
+    "Mean IS improvement 0.00 bps < threshold 0.5"
+  ],
+  "scores": {
+    "n_days": 5,
+    "n_tickers": 1,
+    "n_orders": 20,
+    "hard_sim_agrees": 

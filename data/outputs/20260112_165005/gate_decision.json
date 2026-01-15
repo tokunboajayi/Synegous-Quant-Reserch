@@ -1,0 +1,44 @@
+{
+  "run_id": "20260112_165005",
+  "decision": "REJECT",
+  "reasons": [
+    "Mean IS improvement -24.90 bps < threshold 0.5",
+    "p95 IS worsened by 24.12 bps > tolerance 2.0",
+    "Win rate 0.0% < threshold 50.0%",
+    "Not statistically significant (p=1.000)"
+  ],
+  "scores": {
+    "mean_is_delta_bps": -24.90212775782129,
+    "mean_p95_delta_bps": 24.121973636050825,
+    "win_rate": 0.0,
+    "p_value": 1.0,
+    "ece": 0.05,
+    "p90_coverage": 0.88,
+    "p95_coverage": 0.93,
+    "tail_risk_delta": 0.0
+  },
+  "thresholds": {
+    "min_is_improvement_bps": 0.5,
+    "max_p95_degradation_bps": 2.0,
+    "min_win_rate": 0.5,
+    "p_value_threshold": 0.05,
+    "min_p90_coverage": 0.85,
+    "min_p95_coverage": 0.9,
+    "max_ece": 0.1,
+    "max_psi": 0.25,
+    "max_drift_breach_rate": 0.2,
+    "max_fold_is_std": 3.0,
+    "max_worst_fold_loss": -5.0,
+    "max_tail_risk_increase": 1.0
+  },
+  "passed_checks": [
+    "calibration",
+    "controller_tail_risk"
+  ],
+  "failed_checks": [
+    "mean_is_improvement",
+    "tail_risk",
+    "win_rate",
+    "statistical_significance"
+  ]
+}

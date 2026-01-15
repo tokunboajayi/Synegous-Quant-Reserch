@@ -1,0 +1,13 @@
+Starting MNX Pipeline...
+Ingest Done
+Features Done
+Ranker Done
+Weights Done
+Basket Done
+ERROR: No module named 'nmie.integrations'
+Traceback (most recent call last):
+  File "/app/nmie/control_plane/logic.py", line 239, in run_full_mnx_nmie_pipeline
+    mnx_bridge_to_nmie(params, run_id)
+  File "/app/nmie/control_plane/logic.py", line 193, in mnx_bridge_to_nmie
+    from nmie.integrations.mnx_adapter import bridge_mnx_basket_to_nmie_orders
+ModuleNotFoundError: No module named 'nmie.integrations'
