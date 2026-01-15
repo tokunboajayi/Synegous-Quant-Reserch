@@ -1,6 +1,6 @@
-# Synegious Flows: Getting Started Guide
+# Synegious Flows: Research Engine Guide
 
-Welcome to the **Synegious Flows** workstation. This guide will help you set up and operate the platform for autonomous quantitative research.
+Welcome to the **Synegious Flows** Research Engine. This guide will help you operate the platform for autonomous quantitative discovery and alpha validation.
 
 ---
 

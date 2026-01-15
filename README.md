@@ -2,7 +2,7 @@
   <img src="docs/banner.png" alt="Synegious Flows Banner" width="100%">
   
   # 🌊 Synegious Flows
-  ### Institutional-Grade Autonomous Quantitative Trading Framework
+  ### Institutional-Grade Autonomous Quantitative Research Engine
   
   [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
   [![Real-World Data](https://img.shields.io/badge/Data-100%25%20Live-green.svg?style=for-the-badge&logo=googlesheets&logoColor=white)](#)
@@ -18,7 +18,9 @@
 
 ## 🏛️ Project Overview
 
-**Synegious Flows** is a sophisticated quantitative trading ecosystem designed for high-frequency market research and automated execution. Powered by the **DAMFRAPS** framework, it bridges the gap between raw data and institutional-grade portfolio management.
+**Synegious Flows** (v3++) is a state-of-the-art **Quantitative Research Engine** designed for the full discovery lifecycle of systematic alpha: from autonomous market regime identification and feature engineering to causal validation and portfolio optimization.
+
+Built on the **DAMFRAPS** methodology (Detect, Analyze, Model, Filter, Rank, Allocate, Plan, Submit), the engine leverages the **MNX Module** for deep intelligence and **Alpaca** for real-world paper-trail verification.
 
 ### ⚡ Live Market Pulse
 | Component | Status | Speed |
