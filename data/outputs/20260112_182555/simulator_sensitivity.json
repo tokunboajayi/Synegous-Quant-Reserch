@@ -1,7 +1,0 @@
-{
-  "hard_mean_is_bps": 0.8767117804376319,
-  "soft_mean_is_bps": 0.17059338157289758,
-  "divergence_bps": 0.7061183988647343,
-  "simulators_agree": true,
-  "sensitivity_warning": false
-}

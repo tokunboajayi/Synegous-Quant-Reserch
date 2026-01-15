@@ -1,7 +1,0 @@
-{
-  "ece": 0.05,
-  "brier": 0.02,
-  "coverage_p90": 0.88,
-  "coverage_p95": 0.93,
-  "reliability_bins": []
-}

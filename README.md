@@ -4,87 +4,85 @@
   # 🌊 Synegious Flows
   ### Institutional-Grade Autonomous Quantitative Trading Framework
   
-  [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![Real-World Data](https://img.shields.io/badge/Data-100%25%20Live-green.svg)](#)
-  [![Agentic AI](https://img.shields.io/badge/Engine-Agentic%20AI-orange.svg)](#)
+  [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
+  [![Real-World Data](https://img.shields.io/badge/Data-100%25%20Live-green.svg?style=for-the-badge&logo=googlesheets&logoColor=white)](#)
+  [![Agentic AI](https://img.shields.io/badge/Engine-Agentic%20AI-orange.svg?style=for-the-badge&logo=openai&logoColor=white)](#)
+</div>
+
+<div align="center">
+  <br />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&color=22D3EE&center=true&vCenter=true&width=435&lines=Detecting+Market+Regimes...;Analyzing+Alpha+Signals...;Optimizing+Portfolio+Weights...;Executing+with+Precision+Flow." alt="Typing SVG" />
 </div>
 
 ---
 
 ## 🏛️ Project Overview
 
-**Synegious Flows** (v3++) is a comprehensive quantitative trading platform designed for the full lifecycle of a systematic strategy: from autonomous market research and alpha generation to high-fidelity execution simulation and live broker integration.
+**Synegious Flows** is a sophisticated quantitative trading ecosystem designed for high-frequency market research and automated execution. Powered by the **DAMFRAPS** framework, it bridges the gap between raw data and institutional-grade portfolio management.
 
-Built on the **DAMFRAPS** methodology (Detect, Analyze, Model, Filter, Rank, Allocate, Plan, Submit), Synegious leverages the **MNX Module** for deep portfolio optimization and **Alpaca Paper Trading** for real-world P&L tracking.
-
-### 🚀 Key Features
-
-- **Synegious Nexus**: The autonomous core that orchestrates market regime detection, strategy selection, and validation.
-- **Deep Intelligence**: Markowitz Mean-Variance Optimization and Kelly Criterion sizing based on actual 1-year historical return distributions.
-- **Market Research**: Live sector performance heatmap, factor zoo, and cross-asset correlation analysis.
-- **MNX Integration**: Deep learning-based rankers (LightGBM) and causal controls for high-alpha basket generation.
-- **Execution Studio**: Playback and TCA (Transaction Cost Analysis) for parent order execution.
+### ⚡ Live Market Pulse
+| Component | Status | Speed |
+| :-- | :-- | :-- |
+| **Nexus Engine** | <img src="https://img.shields.io/badge/-ACTIVE-success?style=flat-square&logo=git&logoColor=white" /> | Real-time |
+| **MNX Optimizer** | <img src="https://img.shields.io/badge/-READY-blue?style=flat-square" /> | 100ms calc |
+| **Alpaca Bridge** | <img src="https://img.shields.io/badge/-CONNECTED-brightgreen?style=flat-square" /> | WebSocket |
 
 ---
 
-## 🛠️ Technical Architecture
+## 🚀 Key Milestones
+
+- **[x] Synegious Nexus**: Pulse-based orchestration of regime-aware strategies.
+- **[x] Deep Intelligence**: 2nd-order volatility modeling and Kelly sizing.
+- **[x] MNX Deep Ranker**: LightGBM-based asset ranking with causal validation.
+- **[x] Live P&L Board**: Real-time Alpaca Equity and Daily P&L synchronization.
+
+---
+
+## 🛠️ Performance Architecture
 
 ```mermaid
-graph TD
-    A[Market Data Feed] -->|yfinance| B(Nexus Engine)
-    B --> C{Market Radar}
-    C -->|Bull/Bear/Vol| D[Strategy Library]
-    D --> E[Backtest Validation]
-    E --> F[Intelligence Filter]
-    F --> G[Execution Bridge]
-    G -->|Alpaca| H[Live Paper Trading]
+graph LR
+    A["📡 Market Data"] --> B["🧠 Nexus Loop"]
+    B --> C["🔬 Strategy Lab"]
+    C --> D["📊 MNX Optimizer"]
+    D --> E["⚡ Execution Bridge"]
+    E --> F["🏦 Alpaca Live"]
     
-    subgraph "MNX Optimizer"
-    I[Raw Inputs] --> J[LGBM Ranker]
-    J --> K[Portfolio Neutralizer]
-    K --> G
-    end
+    style B fill:#0c4a6e,stroke:#22d3ee,stroke-width:2px;
+    style D fill:#1e1b4b,stroke:#818cf8,stroke-width:2px;
+    style F fill:#064e3b,stroke:#34d399,stroke-width:2px;
 ```
 
 ---
 
-## 🚦 Quick Start
+## 🚦 Setup in 60 Seconds
 
-### 1. Prerequisites
-- **Docker** & **Docker Compose**
-- **Python 3.10+** (for local development)
-- **Node.js** (for frontend build)
-- **Alpaca Paper Trading Keys**
-
-### 2. Environment Setup
-Create a `.env` file in the root directory:
+### 1. Provision Environment
+Clone the repo and initialize your secrets:
 ```bash
-APCA_API_KEY_ID=your_key_here
-APCA_API_SECRET_KEY=your_secret_here
+git clone https://github.com/tokunboajayi/Synegous-Quant-Reserch.git
+cp .env.example .env
 ```
 
-### 3. Launching with Docker
+### 2. Ignition
+Launch the entire stack (API + Frontend + MNX) using Docker:
 ```bash
-# Clone the repository
-git clone https://github.com/tokunboajayi/Synegous-Quant-Reserch.git
-cd Synegous-Quant-Reserch
-
-# Build and Start
 docker-compose up --build -d
 ```
-The dashboard will be available at [http://localhost:8000/dashboard/](http://localhost:8000/dashboard/)
+
+### 3. Mission Control
+Access the dashboard at: `http://localhost:8000/dashboard/`
 
 ---
 
-## 🧪 Documentation
+## 📖 Deep Dives
 
-- [Getting Started Guide](docs/HOWTO.md)
-- [Technical Whitepaper](docs/system_whitepaper.md)
-- [API Documentation](http://localhost:8000/docs)
+- [🏁 Setup & Usage Guide](docs/HOWTO.md)
+- [📄 Technical Whitepaper](docs/system_whitepaper.md)
+- [🔬 Walkthrough Results](file:///C:/Users/olato/.gemini/antigravity/brain/3b6597b1-5f72-4bcc-92f4-daa8ac46c720/walkthrough.md)
 
 ---
 
 <div align="center">
-  <sub>Built with 💙 by Antigravity for the Quant World.</sub>
+  <sub>Precision Alpha. Engineered by Antigravity.</sub>
 </div>

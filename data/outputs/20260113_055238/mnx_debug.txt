@@ -1,6 +1,0 @@
-Starting MNX Pipeline...
-Ingest Done
-Features Done
-Ranker Done
-Weights Done
-Basket Done

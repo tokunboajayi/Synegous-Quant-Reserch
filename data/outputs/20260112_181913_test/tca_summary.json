@@ -1,9 +1,0 @@
-{
-  "run_id": "20260112_181913_test",
-  "generated_at": "2026-01-12T18:19:13.363612",
-  "strategies": {
-    "TWAP": {
-      "mean_is_bps": 5.0
-    }
-  }
-}
