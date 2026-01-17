@@ -37,6 +37,7 @@ class StrategyUpdateRequest(BaseModel):
     entry_rules: Optional[List[Rule]] = None
     exit_rules: Optional[List[Rule]] = None
     code: Optional[str] = None
+    status: Optional[str] = None
 
 
 class DuplicateRequest(BaseModel):
@@ -119,6 +120,8 @@ def update_strategy(strategy_id: str, request: StrategyUpdateRequest):
         strategy.exit_rules = request.exit_rules
     if request.code is not None:
         strategy.code = request.code
+    if request.status is not None:
+        strategy.status = request.status
     
     return strategy_store.save(strategy)
 

@@ -25,12 +25,24 @@ export const NexusOrchestrator = () => {
     });
     const [results, setResults] = useState<any>(null);
     const [polling, setPolling] = useState(false);
+    const [strategies, setStrategies] = useState<any[]>([]);
+    const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
 
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        fetchStrategies();
+        if (params.get('strategy_id')) {
+            setSelectedStrategyId(params.get('strategy_id'));
+        }
+
         fetchStatus();
         const interval = setInterval(fetchStatus, 2000);
         return () => clearInterval(interval);
-    }, []);
+    }, [window.location.search]);
+
+    const fetchStrategies = async () => {
+        try { const res = await axios.get('/strategies'); setStrategies(res.data); } catch (e) { }
+    };
 
     const fetchStatus = async () => {
         try {
@@ -55,7 +67,9 @@ export const NexusOrchestrator = () => {
 
     const launchNexus = async () => {
         try {
-            await axios.post('/nexus/run');
+            await axios.post('/nexus/run', {
+                strategy_override: selectedStrategyId
+            });
             setResults(null);
             fetchStatus();
         } catch (e) {
@@ -88,6 +102,23 @@ export const NexusOrchestrator = () => {
                         </h1>
                         <p className="text-slate-500 text-sm font-medium">DAMFRAPS Methodology: Dynamic Adaptive Multi-Factor Regime-Aligned Portfolio Synthesis</p>
                     </div>
+                </div>
+
+                {/* Strategy Selector */}
+                <div className="flex items-center gap-3 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+                    <span className="text-slate-400 text-sm font-medium">Execution Mode:</span>
+                    <select
+                        className="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-cyan-500 min-w-[200px]"
+                        value={selectedStrategyId || ''}
+                        onChange={(e) => setSelectedStrategyId(e.target.value)}
+                    >
+                        <option value="">Global Alpha Synthesis (Auto)</option>
+                        <optgroup label="Targeted Execution">
+                            {strategies.map(s => (
+                                <option key={s.strategy_id} value={s.strategy_id}>{s.name}</option>
+                            ))}
+                        </optgroup>
+                    </select>
                 </div>
 
                 <div className="flex items-center gap-4">

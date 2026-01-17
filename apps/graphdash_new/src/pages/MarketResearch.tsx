@@ -3,7 +3,7 @@ import axios from 'axios';
 import {
     Activity, BarChart2, Grid3X3,
     Target, Zap, RefreshCw, ArrowUp, ArrowDown, Minus,
-    Layers
+    Layers, Microscope
 } from 'lucide-react';
 
 // Types
@@ -45,12 +45,23 @@ interface CorrelationPair {
     beta: number;
 }
 
+interface StrategyAnalysis {
+    strategy_id: string;
+    factor_loadings: Record<string, number>;
+    regime_correlations: Record<string, number>;
+    beta: number;
+    recommended_leverage: number;
+}
+
 // Tabs
-type Tab = 'sectors' | 'factors' | 'correlations' | 'regime';
+type Tab = 'sectors' | 'factors' | 'correlations' | 'regime' | 'strategy';
 
 export const MarketResearch = () => {
     const [activeTab, setActiveTab] = useState<Tab>('sectors');
+    const [statusParams, setStatusParams] = useState<URLSearchParams | null>(null);
     const [loading, setLoading] = useState(false);
+    const [strategies, setStrategies] = useState<any[]>([]);
+    const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
 
     // Data
     const [sectors, setSectors] = useState<SectorData[]>([]);
@@ -58,6 +69,25 @@ export const MarketResearch = () => {
     const [pairs, setPairs] = useState<CorrelationPair[]>([]);
     const [regime, setRegime] = useState<MarketRegime | null>(null);
     const [regimeStrategies, setRegimeStrategies] = useState<string[]>([]);
+    const [analysis, setAnalysis] = useState<StrategyAnalysis | null>(null);
+
+    // Check for deep link
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        setStatusParams(params);
+        fetchStrategies();
+        if (params.get('strategy_id')) {
+            setSelectedStrategyId(params.get('strategy_id'));
+            setActiveTab('strategy');
+        }
+    }, [window.location.search]);
+
+    const fetchStrategies = async () => {
+        try {
+            const res = await axios.get('/strategies');
+            setStrategies(res.data);
+        } catch (e) { console.error(e); }
+    };
 
     // Load data based on active tab
     useEffect(() => {
@@ -84,6 +114,11 @@ export const MarketResearch = () => {
                     const regimeRes = await axios.get('/market/regime');
                     setRegime(regimeRes.data.regime);
                     setRegimeStrategies(regimeRes.data.recommended_strategies || []);
+                    break;
+                case 'strategy':
+                    const sId = statusParams?.get('strategy_id') || 'STRAT_DEMO';
+                    const analysisRes = await axios.get(`/market/analysis/${sId}`);
+                    setAnalysis(analysisRes.data);
                     break;
             }
         } catch (e) {
@@ -166,7 +201,7 @@ export const MarketResearch = () => {
                     { id: 'factors', label: 'Factor Zoo', icon: BarChart2 },
                     { id: 'correlations', label: 'Correlations', icon: Layers },
                     { id: 'regime', label: 'Market Regime', icon: Zap },
-                ].map(tab => (
+                ].concat(statusParams?.get('strategy_id') ? [{ id: 'strategy', label: 'Strategy Exposure', icon: Microscope }] : []).map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as Tab)}
@@ -350,6 +385,70 @@ export const MarketResearch = () => {
                                                 {strategy}
                                             </span>
                                         ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Strategy Analysis */}
+                        {activeTab === 'strategy' && analysis && (
+                            <div className="space-y-6">
+                                <div className="bg-[#1a1f26] rounded-xl border border-slate-700 p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-xl font-bold text-slate-100">{analysis.strategy_id} Analysis</h2>
+                                        <div className="flex items-center gap-2">
+                                            <div className="px-3 py-1 bg-blue-500/10 text-blue-400 rounded border border-blue-500/20 text-xs">
+                                                Beta: {analysis.beta}
+                                            </div>
+                                            <div className="px-3 py-1 bg-purple-500/10 text-purple-400 rounded border border-purple-500/20 text-xs">
+                                                Lev: {analysis.recommended_leverage}x
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-8">
+                                        <h3 className="text-sm text-slate-400 mb-3">Factor Footprint</h3>
+                                        <div className="grid grid-cols-5 gap-4">
+                                            {Object.entries(analysis.factor_loadings).map(([factor, loading]) => (
+                                                <div key={factor} className="bg-slate-800/50 p-3 rounded">
+                                                    <div className="flex justify-between text-xs mb-1">
+                                                        <span className="text-slate-400 capitalize">{factor}</span>
+                                                        <span className={loading > 0 ? "text-green-400" : "text-red-400"}>{loading}</span>
+                                                    </div>
+                                                    <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`h-full ${loading > 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                                                            style={{ width: `${Math.abs(loading) * 100}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-8">
+                                        <h3 className="text-sm text-slate-400 mb-3">Regime Fit</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {Object.entries(analysis.regime_correlations).map(([regime, corr]) => (
+                                                <div key={regime} className="flex items-center justify-between p-3 bg-slate-800/30 rounded border border-slate-700/50">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`w-2 h-2 rounded-full ${corr > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                                                        <span className="text-sm text-slate-300 capitalize">{regime.replace('_', ' ')}</span>
+                                                    </div>
+                                                    <div className="text-sm font-mono text-slate-400">{corr > 0 ? '+' : ''}{corr}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end pt-4 border-t border-slate-700">
+                                        <button
+                                            onClick={() => window.open(`/portfolio-intelligence?strategy_id=${analysis.strategy_id}`, '_blank')}
+                                            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium rounded-lg hover:from-purple-500 hover:to-blue-500 transition-all flex items-center gap-2 shadow-lg"
+                                        >
+                                            <Zap size={16} />
+                                            Optimize & Deploy Strategy
+                                        </button>
                                     </div>
                                 </div>
                             </div>

@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const RocketIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan-400"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" /><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /></svg>
+);
 import axios from 'axios';
 import {
     Zap, Brain, Target, Activity, Share2,
     TrendingUp, Shield, BarChart2, PieChart,
-    ChevronRight, ArrowRight, Info, AlertTriangle
+    ChevronRight, ArrowRight, Info, AlertTriangle, Play
 } from 'lucide-react';
 
 type IntelTab = 'kelly' | 'optimizer' | 'montecarlo';
@@ -44,6 +48,10 @@ interface MonteCarloResult {
 export const PortfolioIntelligence = () => {
     const [activeTab, setActiveTab] = useState<IntelTab>('kelly');
     const [loading, setLoading] = useState(false);
+    const [statusParams, setStatusParams] = useState<URLSearchParams | null>(null);
+    const [deployed, setDeployed] = useState(false);
+    const [strategies, setStrategies] = useState<any[]>([]);
+    const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
 
     // Kelly States
     const [winRate, setWinRate] = useState(0.55);
@@ -60,6 +68,49 @@ export const PortfolioIntelligence = () => {
     const [expRet, setExpRet] = useState(0.12);
     const [vol, setVol] = useState(0.18);
     const [mcResult, setMcResult] = useState<MonteCarloResult | null>(null);
+
+    // Auto-load Strategy
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        setStatusParams(params);
+        fetchStrategies();
+        const sId = params.get('strategy_id');
+        if (sId) {
+            setSelectedStrategyId(sId);
+            runStrategyLogic(sId);
+        }
+    }, [window.location.search]);
+
+    const fetchStrategies = async () => {
+        try { const res = await axios.get('/strategies'); setStrategies(res.data); } catch (e) { }
+    };
+
+    const runStrategyLogic = (sId: string) => {
+        // Auto-switch to optimizer
+        setActiveTab('optimizer');
+        // Mock fetching strategy details
+        // In prod this would come from /strategies/{id}
+        if (sId.includes('TECH')) setTickers('AAPL,MSFT,NVDA,AMD,INTC,QCOM');
+        else if (sId.includes('MOM')) setTickers('NVDA,META,LLY,AVGO,ANET');
+        else if (sId.includes('VAL')) setTickers('JPM,XOM,CVX,BRK.B,UNH');
+        else setTickers('SPY,QQQ,IWM,GLD,TLT');
+    };
+
+    const launchNexusTargeted = async () => {
+        if (!optResult || !statusParams?.get('strategy_id')) return;
+
+        try {
+            await axios.post('/nexus/run', {
+                strategy_id: statusParams.get('strategy_id'),
+                weights: optResult.weights,
+                metrics: optResult.portfolio_metrics
+            });
+            setDeployed(true);
+        } catch (e) {
+            console.error("Deployment failed", e);
+            alert("Failed to deploy to Nexus");
+        }
+    };
 
     // Calculations
     const calculateKelly = async () => {
@@ -117,8 +168,26 @@ export const PortfolioIntelligence = () => {
                     <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
                         Deep Portfolio Intelligence
                     </h1>
-                    <p className="text-slate-500 text-sm">Advanced mathematical modeling for capital allocation and risk sizing.</p>
+                    <p className="text-slate-400 mt-1">Deep learning optimization and Kelly Criterion sizing</p>
                 </div>
+                {activeTab === 'optimizer' && (
+                    <div className="flex items-center gap-3">
+                        <span className="text-slate-400 text-sm">Target Strategy:</span>
+                        <select
+                            className="bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-cyan-500"
+                            value={selectedStrategyId || ''}
+                            onChange={(e) => {
+                                setSelectedStrategyId(e.target.value);
+                                runStrategyLogic(e.target.value);
+                            }}
+                        >
+                            <option value="">Manual Input</option>
+                            {strategies.map(s => (
+                                <option key={s.strategy_id} value={s.strategy_id}>{s.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
             </header>
 
             {/* Sub Tabs */}
@@ -132,8 +201,8 @@ export const PortfolioIntelligence = () => {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as IntelTab)}
                         className={`flex-1 p-4 rounded-xl border text-left transition-all ${activeTab === tab.id
-                                ? 'bg-purple-500/10 border-purple-500/50 ring-1 ring-purple-500/30'
-                                : 'bg-[#1a1f26] border-slate-700 hover:border-slate-600'
+                            ? 'bg-purple-500/10 border-purple-500/50 ring-1 ring-purple-500/30'
+                            : 'bg-[#1a1f26] border-slate-700 hover:border-slate-600'
                             }`}
                     >
                         <div className="flex items-center gap-2 mb-1">
@@ -344,6 +413,40 @@ export const PortfolioIntelligence = () => {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Targeted Deployment CTA */}
+                            {statusParams?.get('strategy_id') && (
+                                <div className="mt-6 p-6 bg-gradient-to-r from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 rounded-xl relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                                        <Share2 size={120} />
+                                    </div>
+                                    <div className="relative z-10">
+                                        <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                                            <RocketIcon />
+                                            Deploy Targeted Alpha
+                                        </h3>
+                                        <p className="text-slate-300 text-sm mb-4 max-w-lg">
+                                            You have optimized the <strong>{statusParams.get('strategy_id')}</strong> strategy.
+                                            Deploy these exact weights to the Nexus Orchestrator for automated execution.
+                                        </p>
+
+                                        {deployed ? (
+                                            <div className="flex items-center gap-2 text-green-400 font-bold bg-green-500/10 p-3 rounded border border-green-500/20 w-fit">
+                                                <Zap size={20} className="fill-current" />
+                                                Strategy Deployed to Nexus Logic Engine.
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={launchNexusTargeted}
+                                                className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-2"
+                                            >
+                                                <Play size={20} className="fill-current" />
+                                                DEPLOY TO NEXUS
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 

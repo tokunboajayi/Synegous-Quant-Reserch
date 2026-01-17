@@ -1,18 +1,39 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Play, Activity, Settings, Database, LineChart, BarChart2, Brain, Network } from 'lucide-react';
 import { LiveClock } from './LiveClock';
 import { AccountSummary } from './AccountSummary';
 
 const NavItem = ({ to, icon: Icon, label }: { to: string, icon: any, label: string }) => {
     const location = useLocation();
+    const navigate = useNavigate();
     const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
 
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'link';
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        const strategyId = e.dataTransfer.getData('strategyId');
+        if (strategyId) {
+            // Auto-run navigation
+            navigate(`${to}?strategy_id=${strategyId}&autorun=true`);
+        }
+    };
+
     return (
-        <Link to={to} className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${active ? 'bg-slate-800 text-cyan-400 border-l-4 border-cyan-400' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}>
-            <Icon size={18} />
-            <span className="text-sm font-medium">{label}</span>
-        </Link>
+        <div
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            className="group"
+        >
+            <Link to={to} className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${active ? 'bg-slate-800 text-cyan-400 border-l-4 border-cyan-400' : 'text-slate-400 group-drag-over:bg-cyan-900/50 hover:bg-slate-800 hover:text-slate-200'}`}>
+                <Icon size={18} />
+                <span className="text-sm font-medium">{label}</span>
+            </Link>
+        </div>
     );
 };
 
@@ -21,10 +42,10 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="flex h-screen bg-[#0f1419] text-gray-100 font-sans">
             {/* Sidebar */}
             <div className="w-64 bg-[#1a1f26] border-r border-slate-700 flex flex-col">
-                <div className="p-4 border-b border-slate-700 flex items-center gap-2">
-                    <img src="/brand_logo.png" alt="Synegious" className="w-8 h-8 object-contain invert opacity-90" />
+                <div className="p-4 border-b border-slate-700 flex items-center gap-3">
+                    <img src="/dashboard/brand_logo.png" alt="Synegious" className="w-10 h-10 object-contain opacity-90" />
                     <div>
-                        <div className="font-bold text-lg leading-tight">Synegious Flows</div>
+                        <div className="font-bold text-lg leading-tight text-slate-100">Synegious Flows</div>
                         <div className="text-xs text-slate-500">Control Plane</div>
                     </div>
                 </div>
@@ -54,7 +75,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                     {/* Truth Banner Background */}
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 opacity-50"></div>
 
-                    <h1 className="font-semibold text-lg text-slate-200 z-10">Synegious Research Platform</h1>
+                    <div className="flex items-center gap-3 z-10">
+                        <img src="/dashboard/brand_logo.png" alt="Synegious" className="w-8 h-8 object-contain invert opacity-90" />
+                        <h1 className="font-semibold text-lg text-slate-200">Synegious Research Platform</h1>
+                    </div>
+
                     <div className="flex items-center gap-4 z-10">
                         <AccountSummary />
                         <LiveClock />

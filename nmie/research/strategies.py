@@ -41,6 +41,7 @@ class Strategy(BaseModel):
     name: str
     description: str = ""
     type: Literal["momentum", "mean_reversion", "factor", "pairs", "statistical_arb", "custom"] = "custom"
+    status: Literal["idea", "refine", "backtest", "deployed"] = "idea"
     
     # Strategy components
     signals: List[Signal] = []

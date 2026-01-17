@@ -3,7 +3,8 @@ import axios from 'axios';
 import {
     Database, Search, BookOpen, Copy, Play,
     TrendingUp, BarChart2, Zap,
-    RefreshCw, ArrowUpRight, ArrowDownRight, Activity, Layers, X
+    RefreshCw, ArrowUpRight, ArrowDownRight, Activity, Layers, X,
+    LayoutGrid, Kanban as KanbanIcon
 } from 'lucide-react';
 import { BacktestPanel } from '../components/BacktestPanel';
 
@@ -37,6 +38,7 @@ interface Strategy {
     author: string;
     last_sharpe?: number;
     last_return?: number;
+    status?: 'idea' | 'refine' | 'backtest' | 'deployed';
 }
 
 // Category metadata
@@ -56,6 +58,7 @@ export const StrategyBuilder = () => {
     const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(null);
     const [showTemplatesOnly, setShowTemplatesOnly] = useState(true);
     const [showBacktest, setShowBacktest] = useState(false);
+    const [viewMode, setViewMode] = useState<'grid' | 'kanban'>('grid');
 
     // Fetch strategies on mount
     useEffect(() => {
@@ -73,22 +76,51 @@ export const StrategyBuilder = () => {
         setLoading(false);
     };
 
+    // Drag and Drop Handlers
+    const handleDragStart = (e: React.DragEvent, strategyId: string) => {
+        e.dataTransfer.setData('strategyId', strategyId);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = async (e: React.DragEvent, newStatus: string) => {
+        e.preventDefault();
+        const strategyId = e.dataTransfer.getData('strategyId');
+
+        // Optimistic update
+        setStrategies(prev => prev.map(s =>
+            s.strategy_id === strategyId ? { ...s, status: newStatus as any } : s
+        ));
+
+        // API Update
+        try {
+            await axios.put(`/strategies/${strategyId}`, { status: newStatus });
+        } catch (err) {
+            console.error("Failed to move strategy", err);
+            fetchStrategies(); // Revert on error
+        }
+    };
+
     // Filter strategies
     const filteredStrategies = strategies.filter(s => {
         const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             s.description.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = !selectedCategory || s.type === selectedCategory;
         const matchesTemplate = !showTemplatesOnly || s.is_template;
-        return matchesSearch && matchesCategory && matchesTemplate;
+        return matchesSearch && matchesCategory && (viewMode === 'grid' ? matchesTemplate : true);
     });
 
-    // Group by type for display
+    // ... (existing grouping logic)
     const groupedStrategies = CATEGORIES.map(cat => ({
         ...cat,
         strategies: filteredStrategies.filter(s => s.type === cat.id)
     })).filter(g => g.strategies.length > 0);
 
-    // Duplicate a template
+    // ... (existing duplicate logic)
     const handleDuplicate = async (strategyId: string) => {
         const name = prompt('Enter a name for your strategy:');
         if (!name) return;
@@ -97,12 +129,12 @@ export const StrategyBuilder = () => {
             const res = await axios.post(`/strategies/${strategyId}/duplicate`, { new_name: name });
             setStrategies([res.data, ...strategies]);
             setSelectedStrategy(res.data);
+            if (viewMode === 'kanban') setViewMode('kanban'); // Stay in Kanban
         } catch (e) {
             console.error('Failed to duplicate', e);
         }
     };
 
-    // Category icon component
     const getCategoryIcon = (type: string) => {
         const cat = CATEGORIES.find(c => c.id === type);
         if (cat) {
@@ -110,6 +142,62 @@ export const StrategyBuilder = () => {
             return <Icon size={16} className={cat.color} />;
         }
         return <Layers size={16} className="text-slate-400" />;
+    };
+
+    const KanbanColumn = ({ title, status, color }: { title: string, status: string, color: string }) => {
+        const items = strategies.filter(s => (s.status || 'idea') === status && !s.is_template);
+
+        return (
+            <div
+                className="flex-1 min-w-[300px] h-full flex flex-col bg-[#13171c] rounded-xl border border-slate-800"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, status)}
+            >
+                {/* Column Header */}
+                <div className={`p-4 border-b border-slate-800 ${color} bg-slate-800/20 rounded-t-xl flex justify-between items-center`}>
+                    <h3 className="font-bold">{title}</h3>
+                    <span className="text-xs bg-black/20 px-2 py-1 rounded">{items.length}</span>
+                </div>
+
+                {/* Drop Zone */}
+                <div className="flex-1 p-3 space-y-3 overflow-y-auto">
+                    {items.map(s => (
+                        <div
+                            key={s.strategy_id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, s.strategy_id)}
+                            onClick={() => setSelectedStrategy(s)}
+                            className={`p-4 bg-[#1a1f26] border rounded-lg cursor-grab active:cursor-grabbing hover:border-slate-600 shadow-sm group relative ${selectedStrategy?.strategy_id === s.strategy_id ? 'border-cyan-500/50 bg-cyan-500/5' : 'border-slate-700'
+                                }`}
+                        >
+                            <div className="flex items-start justify-between mb-2">
+                                <h4 className="font-medium text-slate-200 text-sm">{s.name}</h4>
+                                <div className="p-1 rounded bg-slate-800 text-slate-400">
+                                    {getCategoryIcon(s.type)}
+                                </div>
+                            </div>
+                            <p className="text-xs text-slate-500 mb-3 line-clamp-2">{s.description}</p>
+
+                            <div className="flex items-center gap-2 text-[10px] text-slate-600">
+                                <span className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700">
+                                    {s.signals.length} Signals
+                                </span>
+                                {s.last_sharpe && (
+                                    <span className={`${s.last_sharpe > 1 ? 'text-green-400' : 'text-slate-500'}`}>
+                                        SR: {s.last_sharpe.toFixed(2)}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                    {items.length === 0 && (
+                        <div className="h-24 border-2 border-dashed border-slate-800 rounded-lg flex items-center justify-center text-slate-600 text-sm">
+                            Drop strategies here
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -122,21 +210,44 @@ export const StrategyBuilder = () => {
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-slate-100">Strategy Library</h1>
-                        <p className="text-slate-500 text-sm">115+ quantitative trading strategies for every market condition</p>
+                        <p className="text-slate-500 text-sm">
+                            {viewMode === 'grid' ? "115+ quantitative trading strategies" : "Strategy Development Pipeline"}
+                        </p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <span className="text-xs text-slate-500">{filteredStrategies.length} strategies</span>
-                    <button
-                        onClick={() => setShowTemplatesOnly(!showTemplatesOnly)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${showTemplatesOnly
-                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                            : 'bg-slate-800 text-slate-400 border border-slate-700'
-                            }`}
-                    >
-                        {showTemplatesOnly ? 'Templates Only' : 'All Strategies'}
-                    </button>
+                    {/* View Toggle */}
+                    <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+                        <button
+                            onClick={() => { setViewMode('grid'); setShowTemplatesOnly(true); }}
+                            className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                            title="Grid View (Library)"
+                        >
+                            <LayoutGrid size={18} />
+                        </button>
+                        <button
+                            onClick={() => { setViewMode('kanban'); setShowTemplatesOnly(false); }}
+                            className={`p-2 rounded-md transition-all ${viewMode === 'kanban' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                            title="Kanban Board (My Pipeline)"
+                        >
+                            <KanbanIcon size={18} />
+                        </button>
+                    </div>
+
+                    <span className="text-xs text-slate-500 hidden sm:inline">{filteredStrategies.length} items</span>
+
+                    {viewMode === 'grid' && (
+                        <button
+                            onClick={() => setShowTemplatesOnly(!showTemplatesOnly)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${showTemplatesOnly
+                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                : 'bg-slate-800 text-slate-400 border border-slate-700'
+                                }`}
+                        >
+                            {showTemplatesOnly ? 'Templates Only' : 'All Strategies'}
+                        </button>
+                    )}
                 </div>
             </header>
 
@@ -183,62 +294,75 @@ export const StrategyBuilder = () => {
 
             {/* Main Content */}
             <div className="flex-1 flex gap-6 overflow-hidden">
-                {/* Strategy List */}
-                <div className="flex-1 overflow-auto space-y-6">
-                    {loading ? (
-                        <div className="text-center py-12 text-slate-500">Loading strategies...</div>
-                    ) : groupedStrategies.length === 0 ? (
-                        <div className="text-center py-12 text-slate-500">No strategies found</div>
-                    ) : (
-                        groupedStrategies.map(group => (
-                            <div key={group.id}>
-                                {/* Category Header */}
-                                <div className="flex items-center gap-2 mb-3">
-                                    <div className={`w-8 h-8 rounded-lg ${group.bg} flex items-center justify-center`}>
-                                        <group.icon size={16} className={group.color} />
-                                    </div>
-                                    <h2 className={`font-semibold ${group.color}`}>{group.label}</h2>
-                                    <span className="text-slate-600 text-sm">({group.strategies.length})</span>
-                                </div>
-
-                                {/* Strategy Cards */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    {group.strategies.map(strategy => (
-                                        <div
-                                            key={strategy.strategy_id}
-                                            onClick={() => setSelectedStrategy(strategy)}
-                                            className={`p-4 bg-[#1a1f26] border rounded-xl cursor-pointer transition-all hover:border-slate-600 ${selectedStrategy?.strategy_id === strategy.strategy_id
-                                                ? 'border-cyan-500/50 bg-cyan-500/5'
-                                                : 'border-slate-700/50'
-                                                }`}
-                                        >
-                                            <div className="flex items-start justify-between mb-2">
-                                                <h3 className="font-medium text-slate-200 text-sm">{strategy.name}</h3>
-                                                {strategy.is_template && (
-                                                    <span className="px-1.5 py-0.5 text-[10px] bg-slate-700 text-slate-400 rounded">
-                                                        TEMPLATE
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-slate-500 line-clamp-2 mb-3">{strategy.description}</p>
-
-                                            <div className="flex items-center gap-2 text-xs">
-                                                {strategy.signals.length > 0 && (
-                                                    <span className="text-slate-600">{strategy.signals.length} signals</span>
-                                                )}
-                                                {strategy.last_sharpe && (
-                                                    <span className={`${strategy.last_sharpe > 1 ? 'text-green-400' : 'text-slate-500'}`}>
-                                                        SR: {strategy.last_sharpe.toFixed(2)}
-                                                    </span>
-                                                )}
-                                            </div>
+                {/* View Switch */}
+                {viewMode === 'kanban' ? (
+                    <div className="flex-1 overflow-x-auto">
+                        <div className="flex gap-4 h-full min-w-max pb-4">
+                            <KanbanColumn title="My Ideas" status="idea" color="text-slate-400" />
+                            <KanbanColumn title="Refining" status="refine" color="text-cyan-400" />
+                            <KanbanColumn title="Backtesting" status="backtest" color="text-purple-400" />
+                            <KanbanColumn title="Deployed" status="deployed" color="text-green-400" />
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex-1 overflow-auto space-y-6">
+                        {loading ? (
+                            <div className="text-center py-12 text-slate-500">Loading strategies...</div>
+                        ) : groupedStrategies.length === 0 ? (
+                            <div className="text-center py-12 text-slate-500">No strategies found</div>
+                        ) : (
+                            groupedStrategies.map(group => (
+                                <div key={group.id}>
+                                    {/* Category Header */}
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className={`w-8 h-8 rounded-lg ${group.bg} flex items-center justify-center`}>
+                                            <group.icon size={16} className={group.color} />
                                         </div>
-                                    ))}
+                                        <h2 className={`font-semibold ${group.color}`}>{group.label}</h2>
+                                        <span className="text-slate-600 text-sm">({group.strategies.length})</span>
+                                    </div>
+
+                                    {/* Strategy Cards */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {group.strategies.map(strategy => (
+                                            <div
+                                                key={strategy.strategy_id}
+                                                draggable
+                                                onDragStart={(e) => handleDragStart(e, strategy.strategy_id)}
+                                                onClick={() => setSelectedStrategy(strategy)}
+                                                className={`p-4 bg-[#1a1f26] border rounded-xl cursor-grab active:cursor-grabbing transition-all hover:border-slate-600 group ${selectedStrategy?.strategy_id === strategy.strategy_id
+                                                    ? 'border-cyan-500/50 bg-cyan-500/5'
+                                                    : 'border-slate-700/50'
+                                                    }`}
+                                            >
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <h3 className="font-medium text-slate-200 text-sm">{strategy.name}</h3>
+                                                    {strategy.is_template && (
+                                                        <span className="px-1.5 py-0.5 text-[10px] bg-slate-700 text-slate-400 rounded">
+                                                            TEMPLATE
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-slate-500 line-clamp-2 mb-3">{strategy.description}</p>
+
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    {strategy.signals.length > 0 && (
+                                                        <span className="text-slate-600">{strategy.signals.length} signals</span>
+                                                    )}
+                                                    {strategy.last_sharpe && (
+                                                        <span className={`${strategy.last_sharpe > 1 ? 'text-green-400' : 'text-slate-500'}`}>
+                                                            SR: {strategy.last_sharpe.toFixed(2)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))
-                    )}
-                </div>
+                            ))
+                        )}
+                    </div>
+                )}
 
                 {/* Strategy Detail Panel */}
                 <div className="w-96 bg-[#1a1f26] border border-slate-700 rounded-xl overflow-hidden flex flex-col">
